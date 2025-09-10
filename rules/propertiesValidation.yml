@@ -1,0 +1,60 @@
+  rules:
+    # Validate that additionalProperties array exists
+    wso2-api-additional-properties-required:
+      description: "WSO2 API must have additionalProperties defined"
+      given: "$.data"
+      severity: error
+      then:
+        field: "additionalProperties"
+        function: truthy
+
+    # Validate Domain property has valid values
+    wso2-api-domain-valid-values:
+      description: "Domain property must have valid values: DevOps, IoT, Data, Security"
+      given: "$.data.additionalPropertiesMap.Domain"
+      severity: error
+      then:
+        field: "value"
+        function: pattern
+        functionOptions:
+          match: "^(DevOps|IoT|Data|Security)$"
+
+    # Validate Owner property has valid values
+    wso2-api-owner-valid-values:
+      description: "Owner property must have valid values: BU1, BU2, BU3, Global"
+      given: "$.data.additionalPropertiesMap.Owner"
+      severity: error
+      then:
+        field: "value"
+        function: pattern
+        functionOptions:
+          match: "^(BU1|BU2|BU3|Global)$"
+
+    # Validate Domain property is present
+    wso2-api-domain-required:
+      description: "Domain property is required in additionalPropertiesMap"
+      given: "$.data.additionalPropertiesMap"
+      severity: error
+      then:
+        field: "Domain"
+        function: truthy
+
+    # Validate Owner property is present
+    wso2-api-owner-required:
+      description: "Owner property is required in additionalPropertiesMap"
+      given: "$.data.additionalPropertiesMap"
+      severity: error
+      then:
+        field: "Owner"
+        function: truthy
+
+    # Warning for unknown properties
+    wso2-api-unknown-properties:
+      description: "Unknown properties found - only Domain and Owner are expected"
+      given: "$.data.additionalProperties[*]"
+      severity: warn
+      then:
+        field: "name"
+        function: enumeration
+        functionOptions:
+          values: ["Domain", "Owner"]
