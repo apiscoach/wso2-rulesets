@@ -136,32 +136,32 @@ rules:
     recommended: true
     severity: error
     message: "{{description}}: {{error}}"
-    given: "$.paths..requests.requestBody.content"
+    given: "$.paths[*][*].requestBody.content"
     then:
       function: truthy
       field: "application/json"
 
   # adidas-oas3-valid-example-in-parameters && adidas-oas3-valid-example-in-definitions covered by oas3-valid-media-example
 
-  adidas-oas3-protocol-https-only: 
+  adidas-oas3-protocol-https-only:
     description: "ALL requests MUST go through `https` protocol only"
     formats:
       - oas3
     severity: error
     message: "Servers MUST be https and no other protocol is allowed."
-    given: $.servers..url
+    given: $.servers[*].url
     then:
       function: pattern
       functionOptions:
-        notMatch: "/^http:/"
+        match: "^https:"
 
   adidas-oas3-response-success-hal:
     description: "All success responses MUST be of media type `application/hal+json` "
     severity: error
-    given: 
-    - $.paths..responses['300'].content
-    - $.paths..responses['304'].content
-    - $.paths..responses['201'].content
+    given:
+    - $.paths[*][*].responses['300'].content
+    - $.paths[*][*].responses['304'].content
+    - $.paths[*][*].responses['201'].content
     recommended: true
     formats:
       - oas3
@@ -176,9 +176,9 @@ rules:
   adidas-oas3-response-success-OK:
     description: "All success responses MUST be of media type `application/hal+json` or `application/problem+json`"
     severity: error
-    given: 
-    - $.paths..responses['200'].content
-    - $.paths..responses['202'].content
+    given:
+    - $.paths[*][*].responses['200'].content
+    - $.paths[*][*].responses['202'].content
     recommended: true
     formats:
       - oas3
