@@ -17,7 +17,7 @@ rules:
     then:
       function: pattern
       functionOptions:
-        match: "^oauth2$"
+        match: "^(oauth2|oauth_basic_auth_api_key_mandatory)$"
 
   # Validate transport field is present
   wso2-api-transport-required:
