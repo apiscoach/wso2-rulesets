@@ -98,6 +98,78 @@ This file contains general OpenAPI specification validation rules based on Adida
 - **Target**: OK response content (200, 202)
 - **Validation**: OK responses must use HAL JSON or Problem JSON format
 
+### policy-validation.yaml
+
+This file contains validation rules for WSO2 API policies, ensuring that critical security and functionality policies like PIIMaskingRegex and SemanticPromptGuardrail are properly configured.
+
+#### Policy Validation Rules
+
+##### wso2-api-pii-masking-required
+- **Description**: PIIMaskingRegex policy must be present at least one operation level
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Ensures PII masking protection is configured
+
+##### wso2-api-semantic-guardrail-required
+- **Description**: SemanticPromptGuardrail or SemanticCache policy must be present at operation level
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*].policyName`
+- **Validation**: Ensures semantic guardrails are configured for AI operations
+
+##### wso2-api-pii-masking-has-entities
+- **Description**: PIIMaskingRegex policy must have piiEntities parameter
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Validates PII masking configuration completeness
+
+##### wso2-api-pii-masking-has-jsonpath
+- **Description**: PIIMaskingRegex policy must have jsonPath parameter
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Ensures JSONPath targeting is configured for PII masking
+
+##### wso2-api-semantic-guardrail-has-jsonpath
+- **Description**: Semantic guardrail policies must have jsonPath parameter
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Ensures JSONPath targeting is configured for semantic guardrails
+
+##### wso2-api-post-operations-pii-protected
+- **Description**: POST operations should have PII masking protection
+- **Severity**: warn
+- **Target**: `$.data.operations[*]`
+- **Validation**: Recommends PII protection for data submission operations
+
+##### wso2-api-chat-operations-semantic-protected
+- **Description**: Chat and completion operations should have semantic guardrails
+- **Severity**: warn
+- **Target**: `$.data.operations[*]`
+- **Validation**: Recommends semantic protection for AI/ML operations
+
+##### wso2-api-pii-redaction-enabled
+- **Description**: PII masking should have redaction enabled for data protection
+- **Severity**: warn
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Recommends enabling redaction for sensitive data
+
+##### wso2-api-operations-have-security-policy
+- **Description**: Each operation should have at least one security policy
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request`
+- **Validation**: Ensures security measures are in place for all operations
+
+##### wso2-api-pii-entities-structure
+- **Description**: PII entities should be properly structured JSON
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Validates PII entity configuration structure
+
+##### wso2-api-regex-guardrail-pattern
+- **Description**: Regex guardrail policies should have non-empty regex patterns
+- **Severity**: error
+- **Target**: `$.data.operations[*].operationPolicies.request[*]`
+- **Validation**: Ensures regex patterns are properly defined
+
 ### propertiesValidationRules.yml
 
 This file contains validation rules for WSO2 API additional properties.

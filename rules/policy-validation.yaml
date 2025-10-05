@@ -1,0 +1,284 @@
+rules:
+  # Validate that PII Masking policy is present at operation level
+  wso2-api-pii-masking-required:
+    description: "PIIMaskingRegex policy must be present at least on operation level"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          contains:
+            type: object
+            properties:
+              policyName:
+                const: "PIIMaskingRegex"
+
+  # Alternative check for PII masking at API level
+  wso2-api-pii-masking-api-level:
+    description: "PIIMaskingRegex policy can be present at API mediation policies level"
+    given: "$.data.mediationPolicies[*]"
+    severity: info
+    then:
+      field: "policyName"
+      function: enumeration
+      functionOptions:
+        values: ["PIIMaskingRegex", "other"]
+
+  # Validate that Semantic guardrail policy is present
+  wso2-api-semantic-guardrail-required:
+    description: "SemanticPromptGuardrail policy must be present at operation level"
+    given: "$.data.operations[*].operationPolicies.request[*].policyName"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          contains:
+            enum: ["SemanticPromptGuardrail"]
+
+  # Validate PII Masking policy has required parameters
+  wso2-api-pii-masking-has-entities:
+    description: "PIIMaskingRegex policy must have piiEntities parameter"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "PIIMaskingRegex"
+          then:
+            properties:
+              parameters:
+                type: object
+                required: ["piiEntities"]
+                properties:
+                  piiEntities:
+                    type: string
+                    minLength: 1
+
+  # Validate PII Masking policy has jsonPath parameter
+  wso2-api-pii-masking-has-jsonpath:
+    description: "PIIMaskingRegex policy must have jsonPath parameter"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "PIIMaskingRegex"
+          then:
+            properties:
+              parameters:
+                type: object
+                required: ["jsonPath"]
+                properties:
+                  jsonPath:
+                    type: string
+                    pattern: "^\\$\\."
+
+  # Validate Semantic guardrail has proper configuration
+  wso2-api-semantic-guardrail-has-jsonpath:
+    description: "Semantic guardrail policies must have jsonPath parameter"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                enum: ["SemanticPromptGuardrail"]
+          then:
+            properties:
+              parameters:
+                type: object
+                required: ["jsonPath"]
+                properties:
+                  jsonPath:
+                    type: string
+                    pattern: "^\\$\\."
+
+  # Validate POST operations have PII protection
+  wso2-api-post-operations-pii-protected:
+    description: "POST operations should have PII masking protection"
+    given: "$.data.operations[*]"
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              verb:
+                const: "POST"
+          then:
+            properties:
+              operationPolicies:
+                type: object
+                properties:
+                  request:
+                    type: array
+                    contains:
+                      type: object
+                      properties:
+                        policyName:
+                          const: "PIIMaskingRegex"
+
+  # Validate chat/completion operations have semantic guardrails
+  wso2-api-chat-operations-semantic-protected:
+    description: "Chat and completion operations should have semantic guardrails"
+    given: "$.data.operations[*]"
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              target:
+                pattern: ".*(chat|completions|embeddings).*"
+          then:
+            properties:
+              operationPolicies:
+                type: object
+                properties:
+                  request:
+                    type: array
+                    contains:
+                      type: object
+                      properties:
+                        policyName:
+                          enum: ["SemanticPromptGuardrail", "RegexGuardrail"]
+
+  # Validate PII masking has redaction enabled
+  wso2-api-pii-redaction-enabled:
+    description: "PII masking should have redaction enabled for data protection"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "PIIMaskingRegex"
+          then:
+            properties:
+              parameters:
+                type: object
+                properties:
+                  redact:
+                    const: true
+
+  # Validate response policies include security measures
+  wso2-api-response-security-policies:
+    description: "Response policies should include security measures like regex guardrails"
+    given: "$.data.operations[*].operationPolicies.response[*].policyName"
+    severity: info
+    then:
+      function: enumeration
+      functionOptions:
+        values: ["RegexGuardrail", "PIIMaskingRegex", "addLogMessage", "jsonFault"]
+
+  # Validate policy parameters have name field
+  wso2-api-policy-parameters-have-name:
+    description: "Policy parameters should have a name field for identification"
+    given: "$.data.operations[*].operationPolicies.request[*].parameters"
+    severity: warn
+    then:
+      field: "name"
+      function: truthy
+
+  # Validate semantic guardrail thresholds are numeric
+  wso2-api-semantic-threshold-numeric:
+    description: "Semantic guardrail thresholds should be numeric values"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "SemanticPromptGuardrail"
+          then:
+            properties:
+              parameters:
+                type: object
+                properties:
+                  threshold:
+                    type: string
+                    pattern: "^[0-9]+$"
+
+  # Validate that operations have at least one security policy
+  wso2-api-operations-have-security-policy:
+    description: "Each operation should have at least one security policy"
+    given: "$.data.operations[*].operationPolicies.request"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          contains:
+            type: object
+            properties:
+              policyName:
+                enum: ["PIIMaskingRegex", "RegexGuardrail", "SemanticPromptGuardrail", "AzureContentSafetyContentModeration"]
+
+  # Validate PII entities are properly structured
+  wso2-api-pii-entities-structure:
+    description: "PII entities should be properly structured JSON"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "PIIMaskingRegex"
+          then:
+            properties:
+              parameters:
+                type: object
+                properties:
+                  piiEntities:
+                    type: string
+                    pattern: ".*piiEntity.*piiRegex.*"
+
+  # Validate regex guardrails have proper regex patterns
+  wso2-api-regex-guardrail-pattern:
+    description: "Regex guardrail policies should have non-empty regex patterns"
+    given: "$.data.operations[*].operationPolicies.request[*]"
+    severity: error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              policyName:
+                const: "RegexGuardrail"
+          then:
+            properties:
+              parameters:
+                type: object
+                required: ["regex"]
+                properties:
+                  regex:
+                    type: string
+                    minLength: 1
